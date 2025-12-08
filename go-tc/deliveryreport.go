@@ -22,7 +22,7 @@ package tc
 import (
 	"time"
 
-	"github.com/blockcast/multicast/route"
+	multicast "github.com/Blockcast/multicast-api"
 )
 
 // DeliveryReportsResponse is the type of responses from Traffic Ops to GET requests
@@ -47,14 +47,11 @@ type DeleteResponse struct {
 // DeliveryReport represents a delivery report for multicast sessions
 type DeliveryReport struct {
 	// Embed the multicast reception report
-	route.BlockcastReceptionReport `json:",inline"`
+	multicast.BlockcastReceptionReport `json:",inline"`
 
-	// Database-specific fields
-	ID                int               `json:"id" db:"id"`
-	DeliveryMethodID  int               `json:"deliveryMethodId" db:"delivery_method_id"`
-	SessionStartTime  time.Time         `json:"sessionStartTime" db:"session_start_time"`
-	ServerID          int               `json:"serverId" db:"server_id"`
-	HostName          string            `json:"hostName" db:"host_name"`
-	LastUpdated       time.Time         `json:"lastUpdated" db:"last_updated"`
-	FileMissingRanges map[string]string `json:"fileMissingRanges,omitempty" xml:"-"` // Map of "uri-toi" -> missing ranges
+	// Traffic Ops specific fields
+	ID          int        `json:"id" db:"id"`
+	TenantID    int        `json:"tenant_id" db:"tenant_id"`
+	Tenant      *string    `json:"tenant,omitempty"`
+	LastUpdated *time.Time `json:"lastUpdated" db:"last_updated"`
 }

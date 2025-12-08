@@ -1,7 +1,7 @@
 package tc
 
 import (
-	"github.com/blockcast/multicast/common"
+	"github.com/Blockcast/multicast-api/3gpp/models"
 	"github.com/swaggest/jsonschema-go"
 )
 
@@ -40,7 +40,7 @@ type UserServiceSessionResponse struct {
 type UserServiceSession struct {
 	ID        int    `json:"id" db:"id"`
 	ServiceId string `json:"serviceId" db:"serviceId" required:"true"`
-	common.Session
+	models.Session
 	//Delivery []DeliveryMethod `json:"streams" db:"streams"`
 	LastUpdated *Time `json:"lastUpdated" db:"lastUpdated"`
 	//========

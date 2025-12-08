@@ -1,7 +1,7 @@
 package tc
 
 import (
-	"github.com/blockcast/multicast/common"
+	"github.com/Blockcast/multicast-api/3gpp/models"
 	"time"
 )
 
@@ -36,7 +36,8 @@ type UserServiceResponse struct {
 	Alerts
 }
 type UserService struct {
-	common.Service
+	ID int `json:"id" db:"id"`
+	models.UserServiceDescription
 	TenantID int     `json:"tenant_id" db:"tenant_id"`
 	Tenant   *string `json:"tenant,omitempty"`
 	//CDNID             int     `json:"cdnId" db:"cdn_id"`

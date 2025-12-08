@@ -1,9 +1,10 @@
 package tc
 
 import (
-	multicast "github.com/blockcast/multicast/common"
-	"github.com/swaggest/jsonschema-go"
 	"time"
+
+	"github.com/Blockcast/multicast-api/3gpp/models"
+	"github.com/swaggest/jsonschema-go"
 )
 
 /*
@@ -47,7 +48,7 @@ type DeliveryMethod struct {
 	DeliveryService   string    `json:"xml_id" db:"xml_id"`
 	DeliveryServiceID int       `json:"ds_id" db:"ds_id"`
 	LastUpdated       time.Time `json:"lastUpdated" db:"last_updated"`
-	multicast.DeliveryMethod
+	models.DeliveryMethod
 }
 
 func (b DeliveryMethod) PrepareJSONSchema(schema *jsonschema.Schema) error {
