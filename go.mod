@@ -3,7 +3,6 @@ module github.com/Blockcast/trafficops-client
 go 1.25.4
 
 require (
-	github.com/apache/trafficcontrol/v8 v8.0.2
 	github.com/blockcast/multicast v0.3.0
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/influxdata/influxdb v1.9.5

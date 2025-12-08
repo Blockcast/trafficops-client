@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
-	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/Blockcast/trafficops-client/go-rfc"
+	"github.com/Blockcast/trafficops-client/go-tc"
 	"github.com/Blockcast/trafficops-client/toclientlib"
 )
 
