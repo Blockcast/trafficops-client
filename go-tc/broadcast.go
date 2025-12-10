@@ -1,8 +1,10 @@
 package tc
 
 import (
-	"github.com/Blockcast/multicast-api/3gpp/models"
 	"time"
+
+	api "github.com/Blockcast/multicast-api"
+	"github.com/Blockcast/multicast-api/3gpp/models"
 )
 
 /*
@@ -43,7 +45,7 @@ type Broadcast struct {
 	FrequencyMhz        int                 `json:"frequency" db:"frequency"`
 	Polarity            *string             `json:"polarity,omitempty" db:"polarity"`
 	BandwidthMhz        int                 `json:"bandwidth" db:"bandwidth"`
-	Access              models.DeliveryMode `json:"access" db:"access"`
+	Access              api.DeliveryMode    `json:"access" db:"access"`
 	EffectivePowerWatts int                 `json:"erp" db:"erp"`
 	TenantID            int                 `json:"tenant_id" db:"tenant"`
 	Public              bool                `json:"public" db:"public"`
