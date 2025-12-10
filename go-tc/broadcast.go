@@ -4,7 +4,6 @@ import (
 	"time"
 
 	api "github.com/Blockcast/multicast-api"
-	"github.com/Blockcast/multicast-api/3gpp/models"
 )
 
 /*
