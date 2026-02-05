@@ -368,11 +368,17 @@ func LoginWithCert(
 		Jar: jar,
 	}, apiVersions)
 
-	reqInf, err := to.login()
+	// For certificate authentication, we don't call /user/login.
+	// The TLS client certificate provides authentication.
+	// Verify the connection works by making a simple request to get the API version.
+	resp, remoteAddr, err := to.RawRequestWithHdr(http.MethodGet, to.APIBase()+"/ping", nil, nil)
 	if err != nil {
-		return nil, reqInf.RemoteAddr, errors.New("logging in: " + err.Error())
+		return nil, remoteAddr, errors.New("verifying cert auth connection: " + err.Error())
 	}
-	return to, reqInf.RemoteAddr, nil
+	if resp != nil {
+		resp.Body.Close()
+	}
+	return to, remoteAddr, nil
 }
 
 // LoginWithAgent returns an authenticated TOClient.
