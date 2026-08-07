@@ -20,7 +20,8 @@ The fork is intentionally independent, but it is not intentionally frozen.
 Re-syncs are selective reconciliations, not directory replacements.
 
 1. Start from the latest `main` and record the Traffic Control source commit in
-   the pull request and sync commit.
+   the pull request and sync commit. Update `UPSTREAM.md` with that exact commit
+   and the sync date.
 2. Inventory the overlap between upstream `lib/go-tc/` and this repository's
    `go-tc/`. Every upstream file whose relative path already exists in `go-tc/`
    is in scope for review. New upstream-only files are added only when a
@@ -38,6 +39,32 @@ Re-syncs are selective reconciliations, not directory replacements.
 
 The pull request must list files intentionally omitted from the sync and why.
 That list distinguishes a deliberate fork decision from accidental drift.
+
+As verified on 2026-08-07, this fork's `go-tc/` is a strict subset of upstream
+`lib/go-tc/`: 165 files overlap, 112 differ, 53 are byte-identical, 38 exist
+only upstream, and 0 exist only in the fork. The fork has no Blockcast-original
+`go-tc` files; its divergence is within files, primarily from import rewrites.
+Maintain the 0-fork-only invariant. Every sync pull request must report the file
+set comparison and explicitly explain any change to that invariant.
+
+## Deletion Pre-check
+
+Before deleting a symbol from Traffic Control's `lib/go-tc/`, the engineer who
+owns the deletion must run both cross-repository checks:
+
+1. Search this repository's `go-tc/` for the symbol and its serialized values.
+2. Search Blockcast Magma's `cdn/` tree for the same identifiers and values.
+
+Record both results in the Traffic Control deletion pull request. A local search
+in Traffic Control cannot clear either consumer. The GStack Release Engineer
+reviews a positive fork match to determine whether a selective sync, release,
+and Magma dependency bump are required before the deletion can land.
+
+Check absence as well as presence. For example, `MulticastServerType` and
+`AMT_RELAY` occur in neither this fork nor Magma's `cdn/`, so that deletion has
+no Magma exposure through this module. Do not assume that result for other
+symbols, and do not assume a fork match implies a Magma use without the second
+search.
 
 ## Release and Magma Bump
 
