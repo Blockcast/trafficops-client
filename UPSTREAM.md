@@ -6,9 +6,16 @@
 
 The initial extraction did not record its Traffic Control source commit, and the
 existing history does not establish one unambiguously. Do not substitute a
-commit inferred from timestamps. The first selective upstream sync, expected to
-produce `v0.1.6`, must establish the base by replacing the unknown values above
-with the exact Traffic Control commit SHA and sync date.
+commit inferred from timestamps. The first selective upstream sync, whichever
+version it produces, must establish the base by replacing the unknown values
+above with the exact Traffic Control commit SHA and sync date.
+
+That obligation is on the sync, not on a particular version number. This
+paragraph previously named `v0.1.6` as the expected sync release. `v0.1.6` was
+taken on 2026-09-12 by the go-tc erasure bugfix (BLO-33496, delivered in
+BLO-33540), which is not a sync and did not establish the base. Releases are
+numbered sequentially as they are cut, so do not reserve a number for the sync
+in advance — the sync is identified by doing the work above, not by its tag.
 
 Every later sync pull request must update this file. Once a base is established,
 start the next review with:
