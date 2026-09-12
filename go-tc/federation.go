@@ -64,6 +64,7 @@ type CDNFederation struct {
 	CName       *string    `json:"cname" db:"cname"`
 	TTL         *int       `json:"ttl" db:"ttl"`
 	Description *string    `json:"description" db:"description"`
+	Provider    *string    `json:"provider,omitempty" db:"provider"`
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
 	// omitempty only works with primitive types and pointers
@@ -84,6 +85,7 @@ type CDNFederationV5 struct {
 	CName       string    `json:"cname" db:"cname"`
 	TTL         int       `json:"ttl" db:"ttl"`
 	Description *string   `json:"description" db:"description"`
+	Provider    *string   `json:"provider,omitempty" db:"provider"`
 	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
 
 	DeliveryService *CDNFederationDeliveryService `json:"deliveryService,omitempty"`

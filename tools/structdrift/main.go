@@ -14,8 +14,20 @@
 //
 //	structdrift -upstream /path/to/trafficcontrol/lib/go-tc -vendored ./go-tc
 //
+// WHERE THIS RUNS. Not here. Blockcast/trafficcontrol is private and this
+// repository is public, so a job here cannot read upstream without a
+// Blockcast/trafficcontrol credential living in a public repository's Actions
+// secrets. The check runs instead from trafficcontrol's own
+// .github/workflows/go-tc-drift.yml, which has lib/go-tc natively and checks
+// this repository out for the vendored tree and for this tool -- reading a
+// public repository needs no secret, so that direction costs no credential at
+// all. See BLO-33506.
+//
+// At PR time here, go-tc/roundtrip_drift_test.go covers the fields that were
+// measured to be erasing; it is a plain go test and needs no upstream access.
+//
 // Exits non-zero when drift is found. Known-and-accepted omissions are listed
-// in allowed-drift.txt as "StructName.FieldName" lines.
+// in allowed-drift.txt as "StructName.FieldName" lines, each with a reason.
 package main
 
 import (

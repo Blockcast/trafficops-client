@@ -40,6 +40,16 @@ type UserServiceSessionResponse struct {
 type UserServiceSession struct {
 	ID        int    `json:"id" db:"id"`
 	ServiceId string `json:"serviceId" db:"serviceId" required:"true"`
+	// ServiceClass, TransitClass, FootprintId and BandwidthKbps are written by
+	// the Traffic Ops userservice_session UPDATE (service_class, transit_class,
+	// footprint_id, bandwidth_kbps), bound straight from the decoded request
+	// body. They must exist here or a full-object read-modify-write through
+	// UpdateTransportSession silently NULLs all four. ServiceClass is nil for
+	// non-reservation sessions.
+	ServiceClass  *string `json:"serviceClass,omitempty" db:"service_class"`
+	TransitClass  *string `json:"transitClass,omitempty" db:"transit_class"`
+	FootprintId   *string `json:"footprintId,omitempty" db:"footprint_id"`
+	BandwidthKbps *int    `json:"bandwidthKbps,omitempty" db:"bandwidth_kbps"`
 	models.Session
 	//Delivery []DeliveryMethod `json:"streams" db:"streams"`
 	LastUpdated *Time `json:"lastUpdated" db:"lastUpdated"`
