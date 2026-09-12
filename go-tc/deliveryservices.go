@@ -294,11 +294,45 @@ type DeliveryServiceV41 struct {
 	// Cache Groups of the Origin.
 	Regional             bool     `json:"regional" db:"regional"`
 	RequiredCapabilities []string `json:"requiredCapabilities" db:"required_capabilities"`
+	// ExtCDNEnabled opts this Delivery Service into the multi-CDN orchestrator
+	// (BLO-4905). Default false: TR routes traffic only to in-house caches.
+	// When true, TR consults the federation's external CDN targets and the
+	// per-zone health published by TM (BLO-4919). The consumer ships in
+	// BLO-4920; until then the flag is wire-only and has no routing effect.
+	ExtCDNEnabled bool `json:"extCDNEnabled" db:"extcdn_enabled"`
+	// ExtCDNAttributionSource selects which external-CDN cache-hit telemetry
+	// class feeds TR warmth publication for this Delivery Service.
+	ExtCDNAttributionSource ExtCDNAttributionSource `json:"extCDNAttributionSource" db:"extcdn_attribution_source"`
 }
 
 // DeliveryServiceV4 is a Delivery Service as it appears in version 4 of the
 // Traffic Ops API - it always points to the highest minor version in APIv4.
 type DeliveryServiceV4 = DeliveryServiceV41
+
+// ExtCDNAttributionSource selects which cache-hit telemetry class is eligible
+// to feed external-CDN warmth publication for a Delivery Service.
+type ExtCDNAttributionSource string
+
+const (
+	ExtCDNAttributionSourceGatewayHybrid  ExtCDNAttributionSource = "gateway_hybrid"
+	ExtCDNAttributionSourceCFLogpush      ExtCDNAttributionSource = "cf_logpush"
+	ExtCDNAttributionSourcePlayerSDK      ExtCDNAttributionSource = "player_sdk"
+	ExtCDNAttributionSourceSyntheticProbe ExtCDNAttributionSource = "synthetic_probe"
+)
+
+// ValidExtCDNAttributionSource reports whether source is an accepted Delivery
+// Service external-CDN cache-hit attribution selector.
+func ValidExtCDNAttributionSource(source ExtCDNAttributionSource) bool {
+	switch source {
+	case ExtCDNAttributionSourceGatewayHybrid,
+		ExtCDNAttributionSourceCFLogpush,
+		ExtCDNAttributionSourcePlayerSDK,
+		ExtCDNAttributionSourceSyntheticProbe:
+		return true
+	default:
+		return false
+	}
+}
 
 // These are the TLS Versions known by Apache Traffic Control to exist.
 const (
@@ -1281,6 +1315,16 @@ type DeliveryServiceV50 struct {
 	// ExampleURLs is a list of all of the URLs from which content may be
 	// requested from the Delivery Service.
 	ExampleURLs []string `json:"exampleURLs"`
+	// ExtCDNEnabled opts this Delivery Service into the multi-CDN orchestrator
+	// (BLO-4905). Default false: TR routes traffic only to in-house caches.
+	// When true, TR consults the federation's external CDN targets and the
+	// per-zone health published by TM (BLO-4919). The consumer ships in
+	// BLO-4920; until then the flag is wire-only and has no routing effect.
+	ExtCDNEnabled bool `json:"extCDNEnabled" db:"extcdn_enabled"`
+	// ExtCDNAttributionSource selects which external-CDN cache-hit telemetry
+	// class feeds TR warmth publication for this Delivery Service. The default
+	// gateway_hybrid preserves the existing Blockcast-in-path behavior.
+	ExtCDNAttributionSource ExtCDNAttributionSource `json:"extCDNAttributionSource" db:"extcdn_attribution_source"`
 	// FirstHeaderRewrite is a "header rewrite rule" used by ATS at the first
 	// caching layer encountered in the Delivery Service's Topology, or nil if
 	// there is no such rule. This has no effect on Delivery Services that don't
@@ -1370,6 +1414,19 @@ type DeliveryServiceV50 struct {
 	// MaxRequestHeaderBytes is the maximum size (in bytes) of the request
 	// header that is allowed for this Delivery Service.
 	MaxRequestHeaderBytes *int `json:"maxRequestHeaderBytes" db:"max_request_header_bytes"`
+	// AcmeCertKeyType selects the private-key algorithm used when this
+	// Delivery Service's certificate is issued or renewed through ACME.
+	// Recognized values (case-insensitive): "ecdsa-p256" (default),
+	// "ecdsa-p384", "rsa-2048", "rsa-4096". Nil uses the ACME account default.
+	AcmeCertKeyType *string `json:"acmeCertKeyType" db:"acme_cert_key_type"`
+	// AcmeCertDurationDays optionally constrains the requested certificate
+	// validity window (in days) at issuance and renewal. Nil or 0 leaves the
+	// validity period up to the CA, which must support and honor the request.
+	AcmeCertDurationDays *int `json:"acmeCertDurationDays" db:"acme_cert_duration_days"`
+	// AcmeProfile optionally selects an ACME profile when issuing or renewing
+	// (for example Let's Encrypt's "shortlived" profile for short-lived
+	// certificates). Nil uses the CA's default profile.
+	AcmeProfile *string `json:"acmeProfile" db:"acme_profile"`
 	// MidHeaderRewrite is a "header rewrite rule" used by ATS at the Mid-tier
 	// of caching. This has no effect on Delivery Services that don't use a
 	// Topology.

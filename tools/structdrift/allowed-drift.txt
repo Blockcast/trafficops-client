@@ -1,0 +1,105 @@
+# Known struct drift: fields present in trafficcontrol/lib/go-tc but absent from
+# this repository's vendored go-tc copy.
+#
+# TRIAGED 2026-09-12 (BLO-33506) against trafficcontrol master
+# c4ccaffea1e8844656132dd10c863212cd83a500. The original 36-entry baseline was
+# recorded untriaged under BLO-33496; 13 of those entries turned out to be
+# erasing and have been vendored. What remains below is inert, and every line
+# says why.
+#
+# THE TEST. A missing field erases data only when BOTH hold:
+#   1. its column appears in an UPDATE statement in Traffic Ops, bound from the
+#      decoded request struct, and
+#   2. some caller can do a full-object read-modify-write through this client
+#      (i.e. the client has BOTH a read path and a write path for the type).
+# Each entry below names the test it fails. A third condition also matters and
+# is named where it applies: an UPDATE can be written to preserve a column when
+# the client omits the key, which makes (1) true but harmless.
+#
+# TO CLEAR AN ENTRY: vendor the field into the matching struct and delete the
+# line. TO ADD ONE: state which test it fails, with the query or the file:line
+# that shows it. An entry with no reason is not accepted -- the whole point of
+# this file is that a later reader does not have to re-derive the triage.
+#
+# KNOWN TOOL LIMITATION. structdrift keys embedded fields by type name, so it
+# cannot see fields PROMOTED from an embedded struct. UserServiceSession.Delivery
+# below is exactly that case: reported missing, but it round-trips fine. If an
+# entry looks alarming, confirm with a JSON round-trip (see
+# go-tc/roundtrip_drift_test.go) before acting on the AST result.
+
+# --- CRConfig family: fails test 2 (no write path) -------------------------
+# The client exposes only GetCRConfig / GetCRConfigNew. SnapshotCRConfig is a
+# POST that carries no CRConfig body -- it tells Traffic Ops to regenerate the
+# snapshot from the database. No caller can write a CRConfig* through this
+# client, so nothing can be erased by omitting these.
+CRConfig.AMTRelaySourceReaches
+CRConfig.ExtCDNBudgets
+CRConfig.ExtCDNFederations
+CRConfigDeliveryService.CDNIMetadata
+CRConfigDeliveryService.ExtCDNEnabled
+CRConfigLatitudeLongitude.ParentCacheGroup
+CRConfigLatitudeLongitude.SiteCapacity
+CRConfigTrafficOpsServer.TargetCapacity
+CRConfigTrafficOpsServer.UdpPort
+
+# --- DeliveryReport: fails test 1 AND test 2 -------------------------------
+# Test 1: delivery_report is append-only. traffic_ops_golang/deliveryreport/
+# deliveryreport.go has INSERT INTO delivery_report and INSERT INTO
+# delivery_report_file; there is no UPDATE on either table.
+# Test 2: the client has CreateDeliveryReport / CreateDeliveryReportXML /
+# GetDeliveryReports and no update method, so no read-modify-write exists.
+DeliveryReport.DeliveryMethodID
+DeliveryReport.FileMissingRanges
+DeliveryReport.HostName
+DeliveryReport.ServerID
+DeliveryReport.SessionStartTime
+
+# --- Federation mapping types: fails test 2 (no read path) -----------------
+# FederationMapping is referenced by no client method and by no other vendored
+# go-tc type -- it is dead in this extraction. FederationResolverMapping reaches
+# Traffic Ops only through DeliveryServiceFederationResolverMappingRequest on
+# Add/Replace...ForCurrentUser, which the caller constructs; no client GET
+# returns it, so there is no fetched value to lose on a round trip.
+#
+# NOTE: not erasure, but there IS a capability gap here -- a caller cannot
+# express `provider` on a Replace. That is a missing feature, not silent data
+# loss, and it is deliberately out of scope for this file.
+FederationMapping.Provider
+FederationResolverMapping.Provider
+
+# --- IsAvailable: fails test 2 (no client path at all) ---------------------
+# IsAvailable is reachable only as a map value inside CRStates, and the client
+# has no CRStates method whatsoever.
+IsAvailable.ClaimCapacities
+
+# --- RoleV40.PrivLevel: fails test 1 (column is immutable) -----------------
+# updateRoleQuery() in traffic_ops_golang/role/roles.go sets only name and
+# description; priv_level has never been written by any API version's UPDATE.
+# The v5 handler guards on `roleV4.PrivLevel != nil`, so a client that omits the
+# key skips the equality check entirely -- the PUT succeeds and priv_level is
+# untouched. Omitting it cannot fail either quietly or loudly.
+RoleV40.PrivLevel
+
+# --- TenantV50 auth-retired set: passes both tests, safe by construction ---
+# This is the third condition. tm_user_auth_retired_at IS in updateQuery() in
+# traffic_ops_golang/apitenant/tenant.go, and the client does have RMW
+# (GetTenants + UpdateTenant). But that UPDATE is a nested CASE keyed on
+# :tm_user_auth_retired_present whose ELSE branch is the column itself:
+#     ELSE tm_user_auth_retired_at
+# so a body that omits the key preserves the stored value verbatim. Upstream
+# designed this path against exactly the omission failure BLO-33496 describes.
+# TmUserAuthRetiredPresent / TmUserAuthRetiredVal are server-side bind helpers
+# (json:"-"), never on the wire; TmUserAuthRetiredAt is output-only.
+# Vendoring these would add no protection.
+TenantV50.TmUserAuthRetired
+TenantV50.TmUserAuthRetiredAt
+TenantV50.TmUserAuthRetiredPresent
+TenantV50.TmUserAuthRetiredVal
+
+# --- UserServiceSession.Delivery: TOOL FALSE POSITIVE ----------------------
+# Reported missing because the vendored struct does not DECLARE it, but it is
+# promoted from the embedded models.Session (multicast-api v0.1.3 types.go,
+# `Delivery []DeliveryMethod json:"streams"`), so the key round-trips intact.
+# Independently also fails test 1: `streams` is not in the userservice_session
+# UPDATE column list.
+UserServiceSession.Delivery
