@@ -1106,6 +1106,10 @@ type ServerV40 struct {
 	TCPPort      *int    `json:"tcpPort" db:"tcp_port"`
 	Type         string  `json:"type" db:"server_type"`
 	TypeID       *int    `json:"typeId" db:"server_type_id"`
+	// CacheSoftwareType indicates the cache server software type (ATS, VARNISH, GROVE).
+	// This is used for CDNi cache configuration generation to determine which
+	// config format to generate (remap.config for ATS, VCL for Varnish, remap.json for Grove).
+	CacheSoftwareType *string `json:"cacheSoftwareType,omitempty" db:"cache_software_type"`
 	// Deprecated: In APIv5 and later, this extraneous field is not calculated
 	// by Traffic Ops; the information is available by comparing
 	// ConfigUpdateTime to ConfigApplyTime.
@@ -1118,6 +1122,13 @@ type ServerV40 struct {
 	ConfigApplyTime   *time.Time               `json:"configApplyTime" db:"config_apply_time"`
 	RevalUpdateTime   *time.Time               `json:"revalUpdateTime" db:"revalidate_update_time"`
 	RevalApplyTime    *time.Time               `json:"revalApplyTime" db:"revalidate_apply_time"`
+	// HardwareID is the orc8r hardware UUID for magma gateway integration.
+	// This enables Traffic Ops to communicate with orc8r for real-time gateway
+	// status, sync_rpc dispatch, and log streaming. Multiple servers can share
+	// the same HardwareID when running on the same physical gateway.
+	HardwareID *string `json:"hardwareId,omitempty" db:"hardware_id"`
+	// NetworkID is the orc8r network identifier for magma integration.
+	NetworkID *string `json:"networkId,omitempty" db:"network_id"`
 }
 
 // ServerV4 is the representation of a Server in the latest minor version of
@@ -1155,6 +1166,7 @@ func (s ServerV4) Upgrade() ServerV50 {
 		TCPPort:            util.CopyIfNotNil(s.TCPPort),
 		Type:               s.Type,
 		TypeID:             util.CoalesceToDefault(s.TypeID),
+		CacheSoftwareType:  util.CopyIfNotNil(s.CacheSoftwareType),
 		XMPPID:             util.CopyIfNotNil(s.XMPPID),
 		XMPPPasswd:         util.CopyIfNotNil(s.XMPPPasswd),
 		Interfaces:         make([]ServerInterfaceInfoV40, len(s.Interfaces)),
@@ -1163,6 +1175,8 @@ func (s ServerV4) Upgrade() ServerV50 {
 		ConfigApplyTime:    util.CopyIfNotNil(s.ConfigApplyTime),
 		RevalUpdateTime:    util.CopyIfNotNil(s.RevalUpdateTime),
 		RevalApplyTime:     util.CopyIfNotNil(s.RevalApplyTime),
+		HardwareID:         util.CopyIfNotNil(s.HardwareID),
+		NetworkID:          util.CopyIfNotNil(s.NetworkID),
 	}
 
 	copy(upgraded.Profiles, s.ProfileNames)
@@ -1369,10 +1383,22 @@ type ServerV50 struct {
 	TCPPort           *int       `json:"tcpPort" db:"tcp_port"`
 	Type              string     `json:"type" db:"server_type"`
 	TypeID            int        `json:"typeID" db:"server_type_id"`
-	XMPPID            *string    `json:"xmppId" db:"xmpp_id"`
+	// CacheSoftwareType indicates the cache server software type (ATS, VARNISH, GROVE).
+	// This is used for CDNi cache configuration generation to determine which
+	// config format to generate (remap.config for ATS, VCL for Varnish, remap.json for Grove).
+	CacheSoftwareType *string `json:"cacheSoftwareType,omitempty" db:"cache_software_type"`
+	XMPPID            *string `json:"xmppId" db:"xmpp_id"`
 	// Deprecated: This property has unknown purpose and should not be used so
 	// that we can get rid of it.
 	XMPPPasswd *string `json:"xmppPasswd" db:"xmpp_passwd"`
+	// HardwareID is the orc8r hardware UUID for magma gateway integration.
+	// This enables Traffic Ops to communicate with orc8r for real-time gateway
+	// status, sync_rpc dispatch, and log streaming. Multiple servers can share
+	// the same HardwareID when running on the same physical gateway (e.g., ATS,
+	// TM, TR services on one gateway).
+	HardwareID *string `json:"hardwareId,omitempty" db:"hardware_id"`
+	// NetworkID is the orc8r network identifier for magma integration.
+	NetworkID *string `json:"networkId,omitempty" db:"network_id"`
 }
 
 // Downgrade downgrades to a V4 representation of a Server.
@@ -1410,6 +1436,7 @@ func (s ServerV50) Downgrade() ServerV4 {
 		TCPPort:           util.CopyIfNotNil(s.TCPPort),
 		Type:              s.Type,
 		TypeID:            util.Ptr(s.TypeID),
+		CacheSoftwareType: util.CopyIfNotNil(s.CacheSoftwareType),
 		UpdPending:        util.Ptr(s.UpdatePending()),
 		XMPPID:            util.CopyIfNotNil(s.XMPPID),
 		XMPPPasswd:        util.CopyIfNotNil(s.XMPPPasswd),
@@ -1419,6 +1446,8 @@ func (s ServerV50) Downgrade() ServerV4 {
 		ConfigApplyTime:   util.CopyIfNotNil(s.ConfigApplyTime),
 		RevalUpdateTime:   util.CopyIfNotNil(s.RevalUpdateTime),
 		RevalApplyTime:    util.CopyIfNotNil(s.RevalApplyTime),
+		HardwareID:        util.CopyIfNotNil(s.HardwareID),
+		NetworkID:         util.CopyIfNotNil(s.NetworkID),
 	}
 
 	copy(downgraded.ProfileNames, s.Profiles)

@@ -1,0 +1,77 @@
+name: Struct drift
+
+# Guards against BLO-33496: a struct that exists in both trafficcontrol's
+# lib/go-tc and this repository's vendored go-tc, carrying a field on only one
+# side. A caller doing a full-object read-modify-write through this client
+# silently discards such a field on decode and omits it on encode, and Traffic
+# Ops then binds SQL NULL over a column nobody meant to touch. There is no error
+# and no log line, which is why this needs a machine check rather than review.
+#
+# Scoped deliberately: a whole-file diff of the two trees reports ~38 of 88
+# shared files as differing, because this repo is a selective extraction. Only
+# the missing-field case is gated.
+
+on:
+  pull_request:
+    paths:
+      - 'go-tc/**'
+      - 'tools/structdrift/**'
+      - '.github/workflows/struct-drift.yml'
+  schedule:
+    # Upstream adds fields on its own schedule, not ours, so PR-only checking
+    # would never notice a field added upstream after our last go-tc change.
+    - cron: '19 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  struct-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Blockcast/trafficcontrol is private and this repository is public, so
+      # the job-scoped GITHUB_TOKEN cannot read it. UPSTREAM_RO_TOKEN must be a
+      # read-only credential for that one repository.
+      - name: Check for upstream access
+        id: access
+        env:
+          UPSTREAM_RO_TOKEN: ${{ secrets.UPSTREAM_RO_TOKEN }}
+        run: |
+          if [ -z "$UPSTREAM_RO_TOKEN" ]; then
+            echo "have_token=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Struct drift check did NOT run"
+              echo
+              echo "\`UPSTREAM_RO_TOKEN\` is not configured, so upstream \`lib/go-tc\` could not be read."
+              echo "**This check is currently inert — a green tick here does not mean there is no drift.**"
+              echo "Configure a read-only token for \`Blockcast/trafficcontrol\` to activate it."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning title=Struct drift check inert::UPSTREAM_RO_TOKEN is not configured; drift was NOT checked."
+          else
+            echo "have_token=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out upstream lib/go-tc
+        if: steps.access.outputs.have_token == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: Blockcast/trafficcontrol
+          token: ${{ secrets.UPSTREAM_RO_TOKEN }}
+          path: upstream
+          sparse-checkout: lib/go-tc
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Go
+        if: steps.access.outputs.have_token == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Compare struct fields
+        if: steps.access.outputs.have_token == 'true'
+        run: go run ./tools/structdrift -upstream upstream/lib/go-tc -vendored ./go-tc

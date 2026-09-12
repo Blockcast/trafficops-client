@@ -1,0 +1,58 @@
+# Known struct drift: fields present in trafficcontrol/lib/go-tc but absent from
+# this repository's vendored go-tc copy.
+#
+# BASELINE, recorded 2026-09-12 against trafficcontrol master
+# 76595609e1bce75234b0ce78557fb0654f60843d while fixing BLO-33496.
+#
+# These are NOT triaged and NOT asserted to be harmless. They are recorded so
+# the check gates *new* drift instead of failing on a pre-existing backlog it
+# cannot fix. Triage is tracked separately — see the follow-up issue linked from
+# BLO-33496.
+#
+# The risk is NOT uniform across this list. A missing field only erases data
+# when BOTH of these hold:
+#   1. its column appears in an UPDATE statement in Traffic Ops, and
+#   2. some caller does a full-object read-modify-write through this client.
+# Read-only snapshot types (CRConfig, IsAvailable) almost certainly fail (2).
+# Determining which entries fail neither is the triage work, not a conclusion
+# that has already been reached here.
+#
+# To clear an entry: vendor the field into the matching struct and delete the
+# line. To keep one deliberately: leave it and add a `#` comment above it saying
+# why.
+CDNFederation.Provider
+CDNFederationV5.Provider
+CRConfig.AMTRelaySourceReaches
+CRConfig.ExtCDNBudgets
+CRConfig.ExtCDNFederations
+CRConfigDeliveryService.CDNIMetadata
+CRConfigDeliveryService.ExtCDNEnabled
+CRConfigLatitudeLongitude.ParentCacheGroup
+CRConfigLatitudeLongitude.SiteCapacity
+CRConfigTrafficOpsServer.TargetCapacity
+CRConfigTrafficOpsServer.UdpPort
+DeliveryReport.DeliveryMethodID
+DeliveryReport.FileMissingRanges
+DeliveryReport.HostName
+DeliveryReport.ServerID
+DeliveryReport.SessionStartTime
+DeliveryServiceV41.ExtCDNAttributionSource
+DeliveryServiceV41.ExtCDNEnabled
+DeliveryServiceV50.AcmeCertDurationDays
+DeliveryServiceV50.AcmeCertKeyType
+DeliveryServiceV50.AcmeProfile
+DeliveryServiceV50.ExtCDNAttributionSource
+DeliveryServiceV50.ExtCDNEnabled
+FederationMapping.Provider
+FederationResolverMapping.Provider
+IsAvailable.ClaimCapacities
+RoleV40.PrivLevel
+TenantV50.TmUserAuthRetired
+TenantV50.TmUserAuthRetiredAt
+TenantV50.TmUserAuthRetiredPresent
+TenantV50.TmUserAuthRetiredVal
+UserServiceSession.BandwidthKbps
+UserServiceSession.Delivery
+UserServiceSession.FootprintId
+UserServiceSession.ServiceClass
+UserServiceSession.TransitClass
