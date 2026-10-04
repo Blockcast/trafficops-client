@@ -139,6 +139,22 @@ func main() {
 		os.Exit(2)
 	}
 
+	// -allow is CWD-relative and defaults to a path that only resolves from the
+	// repository root. Under a split checkout -- which is how this actually runs
+	// in trafficcontrol's go-tc-drift.yml, with the tool pinned in tool/ and the
+	// tree under comparison mutable in client/ -- the default resolves to the
+	// TOOL's own frozen copy. That file exists, so the run stays green and
+	// nothing says which baseline it used: a moving tree gets compared against a
+	// pinned allow-list, and omissions newly accepted upstream read as real
+	// drift. Announcing the resolved path makes the wrong file visible in the
+	// log instead of silent. The failure was never the default; it was that
+	// nothing announced the substitution (BLO-35637).
+	allowAbs, absErr := filepath.Abs(*allowFile)
+	if absErr != nil {
+		allowAbs = *allowFile
+	}
+	fmt.Fprintf(os.Stderr, "allow-list: %s (%d entries)\n", allowAbs, len(allow))
+
 	// Only structs present on BOTH sides are compared. A struct this repo never
 	// extracted is not drift, it is scope.
 	vendoredStructs := map[string]bool{}
