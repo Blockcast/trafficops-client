@@ -37,6 +37,7 @@ CRConfig.ExtCDNBudgets
 CRConfig.ExtCDNFederations
 CRConfigDeliveryService.CDNIMetadata
 CRConfigDeliveryService.ExtCDNEnabled
+CRConfigLatitudeLongitude.ClientIngressGated
 CRConfigLatitudeLongitude.ParentCacheGroup
 CRConfigLatitudeLongitude.SiteCapacity
 CRConfigTrafficOpsServer.TargetCapacity
