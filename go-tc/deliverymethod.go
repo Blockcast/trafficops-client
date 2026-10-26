@@ -48,6 +48,12 @@ type DeliveryMethod struct {
 	DeliveryService   string    `json:"xml_id" db:"xml_id"`
 	DeliveryServiceID int       `json:"ds_id" db:"ds_id"`
 	LastUpdated       time.Time `json:"lastUpdated" db:"last_updated"`
+	// SendInterface overrides the sender's egress interface for this delivery
+	// method only (BLO-49332). It names an interface inside the sender pod
+	// (e.g. a macvlan "net2"), not a server interface record. nil = no
+	// override. Mirrors trafficcontrol lib/go-tc; without it a read-modify-write
+	// through this client NULLs the column.
+	SendInterface *string `json:"sendInterface,omitempty" db:"send_interface"`
 	models.DeliveryMethod
 }
 
