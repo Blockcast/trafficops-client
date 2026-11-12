@@ -33,6 +33,7 @@
 # snapshot from the database. No caller can write a CRConfig* through this
 # client, so nothing can be erased by omitting these.
 CRConfig.AMTRelaySourceReaches
+CRConfig.BlockcastEgressOverCap
 CRConfig.ExtCDNBudgets
 CRConfig.ExtCDNFederations
 CRConfigDeliveryService.CDNIMetadata
