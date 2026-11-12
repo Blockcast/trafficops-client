@@ -12,9 +12,8 @@ permissions:
 jobs:
   build-and-test:
     timeout-minutes: 20
-    runs-on:
-      group: default-tools
-      labels: arc-light
+    # This public Go build/test lane needs no self-hosted capabilities.
+    runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
